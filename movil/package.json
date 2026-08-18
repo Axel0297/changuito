@@ -29,7 +29,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "apk": "eas build --platform android --profile preview",
+    "apk": "node scripts/apk.mjs",
     "apk:estado": "eas build:list --limit 1"
   },
   "private": true

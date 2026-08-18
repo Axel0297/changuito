@@ -1,0 +1,39 @@
+name: Diagnostico de acceso a SEPA
+
+# Temporal: averigua por que el portal de datos abiertos responde 403 desde los
+# runners de GitHub. Se borra una vez resuelto.
+on:
+  workflow_dispatch:
+
+jobs:
+  probar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Desde donde sale el runner
+        run: curl -s --max-time 20 https://ipinfo.io/json || true
+
+      - name: Pedido pelado
+        run: |
+          curl -s -o /dev/null -w "sin user-agent -> %{http_code}\n" --max-time 20 \
+            "https://datos.produccion.gob.ar/api/3/action/package_show?id=sepa-precios" || true
+
+      - name: Pedido con user-agent de navegador
+        run: |
+          curl -s -o /dev/null -w "con user-agent  -> %{http_code}\n" --max-time 20 \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" \
+            "https://datos.produccion.gob.ar/api/3/action/package_show?id=sepa-precios" || true
+
+      - name: Quien responde y que dice
+        run: |
+          curl -s -D - -o /tmp/cuerpo.html --max-time 20 \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0 Safari/537.36" \
+            "https://datos.produccion.gob.ar/api/3/action/package_show?id=sepa-precios" \
+            | grep -iE "^(HTTP|server|cf-ray|x-|content-type)" || true
+          echo "--- primeras lineas del cuerpo ---"
+          head -c 600 /tmp/cuerpo.html || true
+
+      - name: El host raiz tambien bloquea?
+        run: |
+          curl -s -o /dev/null -w "raiz del portal -> %{http_code}\n" --max-time 20 \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0 Safari/537.36" \
+            "https://datos.produccion.gob.ar/" || true

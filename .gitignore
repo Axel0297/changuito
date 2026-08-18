@@ -6,10 +6,10 @@ publico/
 data/*.json
 data/*.json.gz
 
-# OJO: movil/assets/dataset.json NO va ignorado a proposito.
+# OJO: movil/assets/dataset.dat NO va ignorado a proposito.
 # Es la copia que viaja dentro de la app y EAS arma el paquete del build desde
 # git: si git lo ignora, el build falla con "Unable to resolve module
-# ../assets/dataset.json". Se versiona y se actualiza cuando se compila.
+# ../assets/dataset.dat". Se versiona y se actualiza cuando se compila.
 
 .expo/
 dist/

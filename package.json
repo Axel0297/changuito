@@ -7,7 +7,7 @@
   "scripts": {
     "etl": "node etl/build-dataset.mjs",
     "localidades": "node etl/build-dataset.mjs --listar --cache",
-    "movil": "node etl/build-dataset.mjs --salida movil/assets/dataset.json",
+    "movil": "node etl/build-dataset.mjs --salida movil/assets/dataset.dat",
     "iconos": "node etl/generar-iconos.mjs",
     "publicar": "node etl/publicar.mjs"
   },

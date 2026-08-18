@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import { Asset } from 'expo-asset';
 import { File, Paths } from 'expo-file-system';
 import { crearIndice, sucursalesCercanas } from './comparador';
 import type { Dataset, Indice, ItemCarrito, SucursalCercana } from './comparador';
@@ -34,12 +35,24 @@ export const URL_VERSION = `${BASE_PUBLICACION}/version.json`;
 export const URL_DATASET = `${BASE_PUBLICACION}/dataset.json`;
 
 /**
- * El dataset que viaja en el bundle. Siempre disponible, aunque envejezca.
- * De qué localidad es lo decide el ETL:
- *   node etl/build-dataset.mjs --localidad "MAR DEL PLATA" --salida movil/assets/dataset.json
+ * El dataset que viaja con la app. Siempre disponible, aunque envejezca.
+ *
+ * Va como asset (.dat) y no como .json a proposito: Metro inlinea los .json
+ * dentro del bundle, que despues se compila a bytecode de Hermes, y 8 MB de
+ * datos ahi adentro rompen el motor — la app abria y moria con "Cannot convert
+ * undefined value to object". Como asset se lee del disco en runtime y no pasa
+ * por el compilador.
+ *
+ * De que localidad es lo decide el ETL:
+ *   node etl/build-dataset.mjs --localidad "MAR DEL PLATA" --salida movil/assets/dataset.dat
  */
-function datasetDelBundle(): Dataset {
-  return require('../assets/dataset.json') as Dataset;
+async function datasetDelBundle(): Promise<Dataset> {
+  const asset = Asset.fromModule(require('../assets/dataset.dat'));
+  await asset.downloadAsync();
+  const uri = asset.localUri ?? asset.uri;
+  if (!uri) throw new Error('el asset del dataset no quedo disponible');
+  const crudo = await new File(uri).text();
+  return JSON.parse(crudo) as Dataset;
 }
 
 function archivoCache(): File {
@@ -131,32 +144,34 @@ export function useIndice() {
   useEffect(() => {
     let vivo = true;
 
-    // 1. El dataset del bundle, ya mismo y de forma sincronica. La app tiene
-    //    que poder abrir siempre, sin depender del disco ni de la red.
-    let base: Dataset;
-    try {
-      base = datasetDelBundle();
-      setIndice(crearIndice(base));
-    } catch (e) {
-      // Si falla esto no hay app posible, pero al menos que se vea por que.
-      setError('No pude leer los precios que vienen con la app: ' + mensajeDeError(e));
-      return;
-    }
-
-    // 2. Recien despues, y sin bloquear nada, el cache y la actualizacion.
     (async () => {
+      // 1. Lo primero es tener precios. Se prueba el cache (mas fresco) y el
+      //    asset que vino con la app, y se usa el que llegue en buen estado.
+      let base: Dataset | null = null;
       try {
-        let actual = base;
-
         const cacheado = await conLimite(datasetCacheado(), 8000);
-        if (cacheado && cacheado.fecha_datos > actual.fecha_datos) {
-          actual = cacheado;
-          if (vivo) setIndice(crearIndice(actual));
-        }
+        const delBundle = await conLimite(datasetDelBundle(), 20000);
 
+        if (!delBundle && !cacheado) {
+          throw new Error('no pude leer ni la copia guardada ni la que trae la app');
+        }
+        base =
+          cacheado && (!delBundle || cacheado.fecha_datos > delBundle.fecha_datos)
+            ? cacheado
+            : delBundle!;
+
+        if (!vivo) return;
+        setIndice(crearIndice(base));
+      } catch (e) {
+        if (vivo) setError('No pude abrir los precios: ' + mensajeDeError(e));
+        return;
+      }
+
+      // 2. Recien con la app usable se sale a buscar algo mas nuevo.
+      try {
         if (!URL_DATASET) return;
         if (vivo) setActualizando(true);
-        const nuevo = await conLimite(buscarActualizacion(actual), 90000);
+        const nuevo = await conLimite(buscarActualizacion(base), 90000);
         if (vivo && nuevo) setIndice(crearIndice(nuevo));
       } catch {
         // Quedarse con datos viejos es molesto; romper la app, peor.

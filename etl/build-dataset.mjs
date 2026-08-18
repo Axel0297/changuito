@@ -31,7 +31,7 @@ import AdmZip from 'adm-zip';
 const CENTRO_POR_DEFECTO = { lat: -43.253, lon: -65.309, nombre: 'Trelew' };
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT_DIR = path.join(ROOT, 'data');
-const WORK_DIR = path.join(os.tmpdir(), 'precios-app-etl');
+const WORK_DIR = path.join(os.tmpdir(), 'changuito-etl');
 
 const argv = process.argv.slice(2);
 const flag = (nombre) => {
@@ -311,7 +311,9 @@ async function main() {
   const sucursales = [];
   const productosIdx = new Map(); // ean -> indice en `productos`
   const productos = [];
-  const precios = [];
+  // clave del precio -> fila compartida, para no repetir la misma lista de
+  // precios en cada sucursal de la cadena.
+  const agrupados = new Map();
   // Las leyendas de promo se repiten miles de veces ("Promo A valida desde...").
   // Se guardan una sola vez y en cada precio va el indice.
   const leyendasIdx = new Map();
@@ -372,7 +374,6 @@ async function main() {
         });
       }
       const precioRef = parseFloat(c[10]);
-      const fila = [sucIdx, pIdx, precio, precioRef > 0 ? precioRef : null, c[12] || null];
 
       // Promocion declarada por la cadena. Solo vale si baja el precio de lista:
       // hay filas donde el campo repite el precio o viene mas caro.
@@ -383,39 +384,55 @@ async function main() {
       const promo2 = parseFloat(c[15]);
       const usa2 =
         promo2 > 0 && promo2 < precio && !(promo1 > 0 && promo1 < precio && promo1 <= promo2);
-      const promo = usa2 ? promo2 : promo1;
+      const promoElegida = usa2 ? promo2 : promo1;
 
-      if (promo > 0 && promo < precio) {
+      let promo = null;
+      let lIdx = null;
+      if (promoElegida > 0 && promoElegida < precio) {
+        promo = promoElegida;
         const texto = ((usa2 ? c[16] : c[14]) || '').trim();
-        let lIdx = leyendasIdx.get(texto);
+        lIdx = leyendasIdx.get(texto);
         if (lIdx === undefined) {
           lIdx = leyendas.length;
           leyendasIdx.set(texto, lIdx);
           leyendas.push({ texto, hasta: vigenciaHasta(texto) });
         }
-        fila.push(promo, lIdx);
       }
 
-      precios.push(fila);
+      // Una cadena publica la misma lista en todas sus sucursales: mas de la
+      // mitad de las filas del pais son ese mismo precio repetido. Se guarda una
+      // sola vez con la lista de sucursales que lo comparten, y asi el dataset
+      // pesa la mitad y la app crea la mitad de objetos en memoria.
+      const clave = `${pIdx}|${precio}|${precioRef}|${c[12] || ''}|${promo ?? ''}|${lIdx ?? ''}`;
+      const previo = agrupados.get(clave);
+      if (previo) {
+        previo[6].push(sucIdx);
+      } else {
+        agrupados.set(clave, [
+          pIdx, precio, precioRef > 0 ? precioRef : null, c[12] || null, promo, lIdx, [sucIdx],
+        ]);
+      }
       filas++;
     });
     log('  ' + filas.toLocaleString('es-AR') + ' precios');
   }
 
+  const precios = [...agrupados.values()];
+
   // Cuantas cadenas ofrecen cada producto: sirve para priorizar lo comparable.
   const cadenaPorSucursal = sucursales.map((s) => s.cadena);
   const cadenasPorProducto = new Map();
-  for (const [sucIdx, pIdx] of precios) {
+  for (const [pIdx, , , , , , sucs] of precios) {
     let set = cadenasPorProducto.get(pIdx);
     if (!set) cadenasPorProducto.set(pIdx, (set = new Set()));
-    set.add(cadenaPorSucursal[sucIdx]);
+    for (const si of sucs) set.add(cadenaPorSucursal[si]);
   }
   productos.forEach((p, i) => {
     p.cadenas = cadenasPorProducto.get(i)?.size ?? 0;
   });
 
   const dataset = {
-    version: 1,
+    version: 2,
     generado: new Date().toISOString(),
     fecha_datos: fechaDatos,
     centro: { ...centro, radio_km: RADIO_KM },
@@ -423,8 +440,11 @@ async function main() {
     sucursales,
     productos,
     leyendas,
-    // [indice_sucursal, indice_producto, precio, precio_referencia, unidad_referencia]
-    // y, cuando la cadena declara promocion: (..., precio_promo, indice_leyenda)
+    // [indice_producto, precio, precio_referencia, unidad_referencia,
+    //  precio_promo|null, indice_leyenda|null, [indices_de_sucursal]]
+    //
+    // Una entrada por precio distinto, no por sucursal: las cadenas publican la
+    // misma lista en todos sus locales.
     precios,
   };
 
@@ -442,8 +462,11 @@ async function main() {
   log('sucursales:  ' + sucursales.length + ' de ' + banderas + ' banderas');
   log('productos:   ' + productos.length.toLocaleString('es-AR') +
       ' (' + comparables.toLocaleString('es-AR') + ' en 2+ cadenas)');
-  log('precios:     ' + precios.length.toLocaleString('es-AR'));
-  const conPromo = precios.filter((p) => p.length > 5).length;
+  const parSucursalProducto = precios.reduce((n, p) => n + p[6].length, 0);
+  log('precios:     ' + precios.length.toLocaleString('es-AR') + ' distintos' +
+      ' (cubren ' + parSucursalProducto.toLocaleString('es-AR') + ' combinaciones' +
+      ', ' + (100 - (100 * precios.length) / parSucursalProducto).toFixed(0) + '% menos)');
+  const conPromo = precios.filter((p) => p[4] != null).length;
   log('promos:      ' + conPromo.toLocaleString('es-AR') +
       ' (' + leyendas.length + ' leyendas distintas)');
   log('salida:      ' + path.relative(ROOT, jsonPath) + ' · ' +

@@ -28,7 +28,7 @@ const ARCHIVO_CACHE = 'dataset.json';
  * separacion, abrir la app costaria 10 MB cada vez.
  */
 const BASE_PUBLICACION =
-  'https://github.com/Axel0297/precios-app/releases/latest/download';
+  'https://github.com/Axel0297/changuito/releases/latest/download';
 
 export const URL_VERSION = `${BASE_PUBLICACION}/version.json`;
 export const URL_DATASET = `${BASE_PUBLICACION}/dataset.json`;
@@ -44,6 +44,25 @@ function datasetDelBundle(): Dataset {
 
 function archivoCache(): File {
   return new File(Paths.document, ARCHIVO_CACHE);
+}
+
+/**
+ * Corta cualquier promesa que se cuelgue.
+ *
+ * Hace falta de verdad: la app se quedaba en la pantalla de carga para siempre
+ * porque una lectura de disco no resolvia nunca. Un `await` que no vuelve no
+ * lanza excepcion, asi que el try/catch no lo agarra.
+ */
+function conLimite<T>(promesa: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promesa,
+    new Promise<null>((resolver) => setTimeout(() => resolver(null), ms)),
+  ]);
+}
+
+function mensajeDeError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return String(e);
 }
 
 /** Copia descargada en corridas anteriores, si quedo alguna sana. */
@@ -107,22 +126,43 @@ async function buscarActualizacion(actual: Dataset): Promise<Dataset | null> {
 export function useIndice() {
   const [indice, setIndice] = useState<Indice | null>(null);
   const [actualizando, setActualizando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let vivo = true;
 
-    (async () => {
-      const bundle = datasetDelBundle();
-      const inicial = masFresco(bundle, await datasetCacheado());
-      if (!vivo) return;
-      setIndice(crearIndice(inicial));
+    // 1. El dataset del bundle, ya mismo y de forma sincronica. La app tiene
+    //    que poder abrir siempre, sin depender del disco ni de la red.
+    let base: Dataset;
+    try {
+      base = datasetDelBundle();
+      setIndice(crearIndice(base));
+    } catch (e) {
+      // Si falla esto no hay app posible, pero al menos que se vea por que.
+      setError('No pude leer los precios que vienen con la app: ' + mensajeDeError(e));
+      return;
+    }
 
-      if (!URL_DATASET) return;
-      setActualizando(true);
-      const nuevo = await buscarActualizacion(inicial);
-      if (!vivo) return;
-      if (nuevo) setIndice(crearIndice(nuevo));
-      setActualizando(false);
+    // 2. Recien despues, y sin bloquear nada, el cache y la actualizacion.
+    (async () => {
+      try {
+        let actual = base;
+
+        const cacheado = await conLimite(datasetCacheado(), 8000);
+        if (cacheado && cacheado.fecha_datos > actual.fecha_datos) {
+          actual = cacheado;
+          if (vivo) setIndice(crearIndice(actual));
+        }
+
+        if (!URL_DATASET) return;
+        if (vivo) setActualizando(true);
+        const nuevo = await conLimite(buscarActualizacion(actual), 90000);
+        if (vivo && nuevo) setIndice(crearIndice(nuevo));
+      } catch {
+        // Quedarse con datos viejos es molesto; romper la app, peor.
+      } finally {
+        if (vivo) setActualizando(false);
+      }
     })();
 
     return () => {
@@ -130,7 +170,7 @@ export function useIndice() {
     };
   }, []);
 
-  return { indice, actualizando };
+  return { indice, actualizando, error };
 }
 
 /**

@@ -36,7 +36,7 @@ async function buscarFotoDeProducto(ean: string): Promise<string> {
   try {
     const res = await fetch(
       `https://world.openfoodfacts.org/api/v2/product/${ean}.json?fields=image_front_small_url`,
-      { headers: { 'User-Agent': 'precios-trelew/0.1 (comparador de precios)' } }
+      { headers: { 'User-Agent': 'changuito/1.0 (comparador de precios)' } }
     );
     if (res.ok) {
       const j = await res.json();

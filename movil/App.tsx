@@ -20,20 +20,33 @@ import { ImagenProducto } from './src/ImagenProducto';
 import { C, F } from './src/tema';
 
 export default function App() {
-  const [fuentesListas] = useFonts({
+  // Si las fuentes fallan se sigue con las del sistema: una tipografia que no
+  // carga no puede dejar la app trabada en la pantalla de carga.
+  const [fuentesCargadas, errorFuentes] = useFonts({
     AlfaSlabOne_400Regular,
     Bitter_400Regular,
     Bitter_600SemiBold,
     Bitter_700Bold,
   });
-  const { indice, actualizando } = useIndice();
+  const fuentesResueltas = fuentesCargadas || !!errorFuentes;
+  const { indice, actualizando, error } = useIndice();
   const [radio, setRadio] = useRadio(5);
   const { sucursales, gpsActivo } = useSucursales(indice, radio);
   const { carrito, agregar, cambiarCantidad, quitar, vaciar } = useCarrito(indice);
   const [pestana, setPestana] = useState<'carrito' | 'ofertas' | 'comparar'>('carrito');
   const [escaneando, setEscaneando] = useState(false);
 
-  if (!indice || !fuentesListas) {
+  // Un spinner eterno no dice nada. Si algo se rompio, que se lea.
+  if (error) {
+    return (
+      <SafeAreaView style={[s.pantalla, s.centrado]}>
+        <Text style={s.vacioTitulo}>No pude abrir los precios</Text>
+        <Text style={s.vacio}>{error}</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!indice || !fuentesResueltas) {
     return (
       <SafeAreaView style={[s.pantalla, s.centrado]}>
         <ActivityIndicator size="large" color={C.acento} />
@@ -47,7 +60,7 @@ export default function App() {
       <StatusBar barStyle="dark-content" />
 
       <View style={s.encabezado}>
-        <Text style={s.supratitulo}>precios</Text>
+        <Text style={s.supratitulo}>changuito</Text>
         <Text style={s.titulo} numberOfLines={1} adjustsFontSizeToFit>
           {indice.dataset.centro.nombre}
         </Text>

@@ -1,4 +1,4 @@
-# precios-app
+# changuito
 
 Comparador de precios de supermercados construido sobre el dataset abierto **SEPA**
 (Sistema Electrónico de Publicidad de Precios Argentinos). Viene apuntado a **Trelew**,
@@ -8,7 +8,7 @@ reportando: ver "Otras localidades".
 Elegís los productos que querés comprar y la app te dice a qué súper conviene ir.
 
 ```
-precios-app/
+changuito/
 ├── etl/     descarga el dataset nacional y lo recorta a la zona
 ├── core/    motor de comparacion (JS puro, corre en Node y en React Native)
 ├── data/    dataset generado
@@ -341,8 +341,8 @@ Corre el ETL, verifica que la salida no venga vacía y sube el resultado como ad
 una release de GitHub. Las URLs son estables:
 
 ```
-https://github.com/Axel0297/precios-app/releases/latest/download/version.json
-https://github.com/Axel0297/precios-app/releases/latest/download/dataset.json
+https://github.com/Axel0297/changuito/releases/latest/download/version.json
+https://github.com/Axel0297/changuito/releases/latest/download/dataset.json
 ```
 
 La app las consulta sola: al abrirse pide `version.json` y baja el dataset **sólo si hay
@@ -363,7 +363,7 @@ Para que se actualice sin acordarse, conviene una tarea programada de Windows qu
 `npm run publicar` una vez por día después de las 19:00 (SEPA republica ~16:20 ART):
 
 ```powershell
-schtasks /create /tn "Precios Trelew - publicar" /tr "cmd /c cd /d C:\Users\axelr\precios-app && npm run publicar" /sc daily /st 19:30
+schtasks /create /tn "Changuito - publicar" /tr "cmd /c cd /d C:\Users\axelr\precios-app && npm run publicar" /sc daily /st 19:30
 ```
 
 Requiere `gh` autenticado, que ya lo está en `.herramientas/bin/gh.exe`.

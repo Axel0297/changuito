@@ -32,15 +32,25 @@ export function crearIndice(dataset) {
   const conPromo = [];
 
   for (const fila of dataset.precios) {
-    const [si, pi, precio, precioRef, unidadRef, promo, leyendaIdx] = fila;
-    const leyenda =
-      leyendaIdx != null ? dataset.leyendas?.[leyendaIdx] ?? null : null;
+    // v2 agrupa por precio: una entrada vale para todas las sucursales que lo
+    // comparten. v1 traia una fila por sucursal.
+    const esV2 = Array.isArray(fila[6]);
+    const [pi, precio, precioRef, unidadRef, promo, leyendaIdx, sucursalesDelPrecio] = esV2
+      ? fila
+      : [fila[1], fila[2], fila[3], fila[4], fila[5] ?? null, fila[6] ?? null, [fila[0]]];
+
+    const leyenda = leyendaIdx != null ? dataset.leyendas?.[leyendaIdx] ?? null : null;
+
+    // Un solo objeto para todas las sucursales que comparten este precio: es la
+    // mitad de los objetos en memoria, que es lo que ahoga a un telefono modesto.
+    const dato = { precio, precioRef, unidadRef, promo: promo ?? null, leyenda };
 
     let m = preciosPorProducto.get(pi);
     if (!m) preciosPorProducto.set(pi, (m = new Map()));
-    m.set(si, { precio, precioRef, unidadRef, promo: promo ?? null, leyenda });
-
-    if (promo > 0 && promo < precio) conPromo.push({ si, pi, precio, promo, leyenda });
+    for (const si of sucursalesDelPrecio) {
+      m.set(si, dato);
+      if (dato.promo != null) conPromo.push({ si, pi, precio, promo: dato.promo, leyenda });
+    }
   }
 
   const busqueda = dataset.productos.map((p, i) => ({

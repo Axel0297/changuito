@@ -41,10 +41,8 @@ const pendiente = execSync('git status --porcelain assets/dataset.json', {
 }).trim();
 if (pendiente) {
   console.error(
-    `El dataset cambio y no esta commiteado (${pendiente}).
-` +
-      '  El build usa lo que hay en git, asi que compilarias con el dataset viejo.
-' +
+    `El dataset cambio y no esta commiteado (${pendiente}).\n` +
+      '  El build usa lo que hay en git, asi que compilarias con el dataset viejo.\n' +
       '  Correlo:  git add movil/assets/dataset.json && git commit -m "Actualizar dataset"'
   );
   process.exit(1);

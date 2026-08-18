@@ -333,26 +333,40 @@ explícitamente** en `app.json`: la app no graba audio y no tiene por qué pedir
 
 ## Publicar el dataset
 
-`.github/workflows/dataset.yml` corre el ETL todos los días a las 19:00 ART (después de
-que SEPA republica, ~16:20 ART), verifica que la salida no venga vacía y la sube a
-GitHub Pages. Si el dataset sale sospechoso, el job falla y **no pisa** el que ya estaba
-funcionando.
+```bash
+npm run publicar
+```
 
-Para activarlo:
+Corre el ETL, verifica que la salida no venga vacía y sube el resultado como adjunto de
+una release de GitHub. Las URLs son estables:
 
-1. Subir el repo a GitHub.
-2. En *Settings → Pages*, elegir **GitHub Actions** como origen.
-3. Correr el workflow una vez a mano (*Actions → Actualizar dataset → Run workflow*) y
-   copiar la URL que quedó publicada.
-4. Poner esa URL en `URL_DATASET`, en `movil/src/datos.ts`:
+```
+https://github.com/Axel0297/precios-app/releases/latest/download/version.json
+https://github.com/Axel0297/precios-app/releases/latest/download/dataset.json
+```
 
-   ```ts
-   export const URL_DATASET = 'https://TU-USUARIO.github.io/precios-app/dataset.json';
-   ```
+La app las consulta sola: al abrirse pide `version.json` y baja el dataset **sólo si hay
+datos más nuevos** que los que ya tiene. Sin esa separación, cada apertura costaría 10 MB;
+así el chequeo son 135 bytes y menos de un segundo.
 
-Mientras `URL_DATASET` esté vacía, la app no sale a la red y usa sólo el dataset del
-bundle. No hace falta comprimir: GitHub Pages sirve el JSON con gzip de transporte y
-`fetch` lo descomprime solo.
+### Por qué no corre en GitHub Actions
+
+Estuvo escrito como workflow programado y **no funciona**: el portal de datos abiertos
+responde **403 a los runners de GitHub**. Lo verifiqué con un job de diagnóstico —el
+runner sale desde Moses Lake (EE.UU., Azure) y el 403 aparece con y sin User-Agent de
+navegador, incluso en la página raíz del portal—, así que es bloqueo por IP, por
+geografía o por rangos de datacenter. Desde una conexión argentina responde normal.
+
+Por eso el ETL corre en la máquina de casa y a GitHub sólo viaja el resultado recortado.
+
+Para que se actualice sin acordarse, conviene una tarea programada de Windows que corra
+`npm run publicar` una vez por día después de las 19:00 (SEPA republica ~16:20 ART):
+
+```powershell
+schtasks /create /tn "Precios Trelew - publicar" /tr "cmd /c cd /d C:\Users\axelr\precios-app && npm run publicar" /sc daily /st 19:30
+```
+
+Requiere `gh` autenticado, que ya lo está en `.herramientas/bin/gh.exe`.
 
 ## Lo que falta
 

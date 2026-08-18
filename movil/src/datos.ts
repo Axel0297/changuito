@@ -19,11 +19,19 @@ const CLAVE_RADIO = 'radio.v1';
 const ARCHIVO_CACHE = 'dataset.json';
 
 /**
- * URL del dataset publicado por el ETL. Mientras este vacia, la app usa solo el
- * dataset del bundle y nunca sale a la red.
- * Ver README, seccion "Publicar el dataset".
+ * De donde se bajan los precios actualizados. Mientras este vacio, la app usa
+ * solo el dataset del bundle y nunca sale a la red.
+ *
+ * Son dos archivos a proposito: `version.json` pesa unos cientos de bytes y
+ * `dataset.json` diez megas. Primero se consulta la version, y el dataset se
+ * baja unicamente cuando hay datos mas nuevos que los que ya tenemos. Sin esa
+ * separacion, abrir la app costaria 10 MB cada vez.
  */
-export const URL_DATASET = '';
+const BASE_PUBLICACION =
+  'https://github.com/Axel0297/precios-app/releases/latest/download';
+
+export const URL_VERSION = `${BASE_PUBLICACION}/version.json`;
+export const URL_DATASET = `${BASE_PUBLICACION}/dataset.json`;
 
 /**
  * El dataset que viaja en el bundle. Siempre disponible, aunque envejezca.
@@ -66,6 +74,13 @@ function masFresco(a: Dataset, b: Dataset | null): Dataset {
 async function buscarActualizacion(actual: Dataset): Promise<Dataset | null> {
   if (!URL_DATASET) return null;
   try {
+    // Primero el archivito de version: si no hay nada nuevo, nos ahorramos
+    // bajar los 10 MB del dataset.
+    const resVersion = await fetch(URL_VERSION, { cache: 'no-store' });
+    if (!resVersion.ok) return null;
+    const version = (await resVersion.json()) as { fecha_datos?: string };
+    if (!version?.fecha_datos || !(version.fecha_datos > actual.fecha_datos)) return null;
+
     const res = await fetch(URL_DATASET);
     if (!res.ok) return null;
     const nuevo = (await res.json()) as Dataset;

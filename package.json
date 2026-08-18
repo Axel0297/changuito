@@ -8,7 +8,8 @@
     "etl": "node etl/build-dataset.mjs",
     "localidades": "node etl/build-dataset.mjs --listar --cache",
     "movil": "node etl/build-dataset.mjs --salida movil/assets/dataset.json",
-    "iconos": "node etl/generar-iconos.mjs"
+    "iconos": "node etl/generar-iconos.mjs",
+    "publicar": "node etl/publicar.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16"

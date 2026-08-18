@@ -1,17 +1,14 @@
 /**
  * Compila el APK.
  *
- * Existe solo para poner EAS_NO_VCS=1, y eso tiene una razon concreta: el
- * dataset (`assets/dataset.json`, ~8 MB que se regeneran a diario) esta en el
- * .gitignore, pero la app lo necesita dentro del bundle.
+ * Chequea antes de gastar 15 minutos de cola que el dataset este generado Y
+ * versionado, porque las dos cosas hacen falta:
  *
- * Cuando el proyecto no era un repo git, EAS empaquetaba los archivos del
- * directorio respetando .easignore y el dataset entraba. Apenas se creo el
- * repo, EAS paso a armar el paquete desde git, y ahi el dataset dejo de
- * viajar: .easignore puede *sacar* archivos, pero no puede *meter* uno que git
- * ignora. El build fallaba con "Unable to resolve module ../assets/dataset.json".
- *
- * Con EAS_NO_VCS=1 se vuelve al empaquetado por directorio y el dataset entra.
+ * EAS arma el paquete del build desde git. Si `assets/dataset.json` no esta
+ * commiteado, no viaja, y el build muere recien en la fase de bundling con
+ * "Unable to resolve module ../assets/dataset.json". Ni .easignore ni
+ * EAS_NO_VCS alcanzan para meter un archivo que git no tiene: se probaron los
+ * dos y fallaron igual. La unica forma es versionarlo.
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -29,10 +26,34 @@ if (!fs.existsSync(DATASET)) {
 }
 
 const mb = (fs.statSync(DATASET).size / 1048576).toFixed(1);
-console.log(`dataset presente: ${mb} MB`);
+
+// Que exista en disco no alcanza: tiene que estar en git o no llega al build.
+const seguimiento = execSync('git ls-files --error-unmatch assets/dataset.json', {
+  cwd: RAIZ, stdio: ['ignore', 'pipe', 'ignore'], encoding: 'utf8',
+}).trim();
+if (!seguimiento) {
+  console.error('assets/dataset.json existe pero no esta versionado: el build no lo va a recibir.');
+  process.exit(1);
+}
+
+const pendiente = execSync('git status --porcelain assets/dataset.json', {
+  cwd: RAIZ, encoding: 'utf8',
+}).trim();
+if (pendiente) {
+  console.error(
+    `El dataset cambio y no esta commiteado (${pendiente}).
+` +
+      '  El build usa lo que hay en git, asi que compilarias con el dataset viejo.
+' +
+      '  Correlo:  git add movil/assets/dataset.json && git commit -m "Actualizar dataset"'
+  );
+  process.exit(1);
+}
+
+console.log(`dataset presente y versionado: ${mb} MB`);
 
 const extra = process.argv.slice(2).join(' ');
 execSync(
   `npx eas-cli build --platform android --profile preview ${extra}`.trim(),
-  { cwd: RAIZ, stdio: 'inherit', env: { ...process.env, EAS_NO_VCS: '1' }, shell: true }
+  { cwd: RAIZ, stdio: 'inherit', shell: true }
 );

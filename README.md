@@ -300,9 +300,20 @@ permitir "instalar apps de origen desconocido" la primera vez.
 npm run movil            # desde la raíz del repo
 ```
 
-Hay un `.easignore` justamente por esto: `assets/dataset.json` está en `.gitignore` (son
-10 MB que se regeneran a diario), pero el build lo necesita. Sin ese archivo el APK
-saldría sin precios.
+### El dataset y el empaquetado del build
+
+`assets/dataset.json` está en `.gitignore` —son megas que se regeneran a diario, no tiene
+sentido versionarlos— pero el build **sí** lo necesita. Eso choca de una forma que costó
+un build entero descubrir:
+
+- Mientras el proyecto no fue un repo git, EAS empaquetaba el directorio respetando
+  `.easignore`, y el dataset entraba.
+- Apenas se creó el repo, EAS pasó a armar el paquete **desde git**. Y `.easignore` puede
+  *sacar* archivos, pero no puede *meter* uno que git ignora. El build empezó a fallar con
+  `Unable to resolve module ../assets/dataset.json`.
+
+Por eso `npm run apk` pasa por `scripts/apk.mjs`, que pone `EAS_NO_VCS=1` para volver al
+empaquetado por directorio, y aborta con un mensaje claro si el dataset no está generado.
 
 ### Ícono
 

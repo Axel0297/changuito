@@ -90,10 +90,22 @@ function vigenciaHasta(leyenda) {
   return `${a}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
 
+/**
+ * El portal rechaza con 403 a quien no parece un navegador: Node manda su
+ * propio User-Agent y eso alcanza para que corte la conexion (se ve al correr
+ * el ETL desde un runner de CI).
+ */
+const CABECERAS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+  Accept: '*/*',
+  'Accept-Language': 'es-AR,es;q=0.9',
+};
+
 /** Resuelve el ZIP del dia mas reciente publicado. */
 async function resolverRecurso() {
   const url = 'https://datos.produccion.gob.ar/api/3/action/package_show?id=sepa-precios';
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: CABECERAS });
   if (!res.ok) throw new Error('CKAN respondio ' + res.status);
   const { result } = await res.json();
   const zips = result.resources
@@ -111,7 +123,7 @@ async function descargar(recurso) {
     return destino;
   }
   log('descargando ' + recurso.name + ' (' + (recurso.size / 1e6).toFixed(0) + ' MB)...');
-  const res = await fetch(recurso.url);
+  const res = await fetch(recurso.url, { headers: CABECERAS });
   if (!res.ok) throw new Error('descarga fallo con ' + res.status);
   await pipeline(Readable.fromWeb(res.body), fs.createWriteStream(destino));
   return destino;

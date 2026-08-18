@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator, FlatList, Pressable, SafeAreaView, ScrollView,
-  StatusBar, StyleSheet, Text, TextInput, View,
+  StatusBar, Text, TextInput, View,
 } from 'react-native';
-import { useFonts, Bitter_400Regular, Bitter_600SemiBold, Bitter_700Bold } from '@expo-google-fonts/bitter';
-import { AlfaSlabOne_400Regular } from '@expo-google-fonts/alfa-slab-one';
+import {
+  useFonts, Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold,
+} from '@expo-google-fonts/figtree';
+import { Caprasimo_400Regular } from '@expo-google-fonts/caprasimo';
 import {
   alternativas, buscarProductos, cadenasConPromo, compararCarrito,
   formatearPesos, formatearPorUnidad, ofertasDeclaradas, precioPorUnidad,
@@ -17,16 +19,17 @@ import type { Rubro } from './src/categorias';
 import { useCarrito, useIndice, useRadio, useSucursales } from './src/datos';
 import { Escaner } from './src/Escaner';
 import { ImagenProducto } from './src/ImagenProducto';
-import { C, F } from './src/tema';
+import { C } from './src/tema';
+import { s } from './src/estilos';
 
 export default function App() {
   // Si las fuentes fallan se sigue con las del sistema: una tipografia que no
   // carga no puede dejar la app trabada en la pantalla de carga.
   const [fuentesCargadas, errorFuentes] = useFonts({
-    AlfaSlabOne_400Regular,
-    Bitter_400Regular,
-    Bitter_600SemiBold,
-    Bitter_700Bold,
+    Caprasimo_400Regular,
+    Figtree_400Regular,
+    Figtree_600SemiBold,
+    Figtree_700Bold,
   });
   const fuentesResueltas = fuentesCargadas || !!errorFuentes;
   const { indice, actualizando, error } = useIndice();
@@ -64,10 +67,6 @@ export default function App() {
         <Text style={s.titulo} numberOfLines={1} adjustsFontSizeToFit>
           {indice.dataset.centro.nombre}
         </Text>
-        <View style={s.reglaDoble}>
-          <View style={s.reglaGruesa} />
-          <View style={s.reglaFina} />
-        </View>
         <Text style={s.subtitulo}>
           {sucursales.length} súper cerca · datos del{' '}
           {formatearFecha(indice.dataset.fecha_datos)}
@@ -204,13 +203,14 @@ function listaEnEspanol(nombres: string[]) {
   return nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1];
 }
 
-/** Titulo de seccion con filete a los costados, como rotulo de vidriera. */
+/**
+ * Titulo de seccion. Organic evita las reglas horizontales y separa con aire,
+ * asi que es solo texto en versalitas con espacio arriba.
+ */
 function Rotulo({ children }: any) {
   return (
     <View style={s.rotulo}>
-      <View style={s.rotuloLinea} />
       <Text style={s.rotuloTexto}>{children}</Text>
-      <View style={s.rotuloLinea} />
     </View>
   );
 }
@@ -567,210 +567,3 @@ function formatearFecha(iso: string) {
   return `${d}/${m}`;
 }
 
-const s = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: C.fondo },
-  contenido: { flex: 1, paddingHorizontal: 16 },
-  scrollFondo: { paddingBottom: 40 },
-  centrado: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  flex: { flex: 1 },
-  derecha: { alignItems: 'flex-end' },
-  cargando: { marginTop: 12, color: C.suave, fontFamily: F.cuerpo },
-
-  encabezado: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10 },
-  // "precios" chiquito arriba y la localidad grande abajo, como cartel de vidriera.
-  supratitulo: {
-    fontSize: 10.5, color: C.suave, textAlign: 'center',
-    fontFamily: F.cuerpoMedio, textTransform: 'uppercase', letterSpacing: 5,
-  },
-  titulo: {
-    fontSize: 28, color: C.texto, fontFamily: F.titulo,
-    textAlign: 'center', letterSpacing: 0.5, marginTop: 2,
-  },
-  reglaDoble: { marginTop: 6, marginBottom: 6 },
-  reglaGruesa: { height: 2, backgroundColor: C.texto, opacity: 0.75 },
-  reglaFina: { height: 1, backgroundColor: C.texto, opacity: 0.4, marginTop: 2 },
-  subtitulo: {
-    fontSize: 11.5, color: C.suave, textAlign: 'center',
-    fontFamily: F.cuerpo, letterSpacing: 0.4,
-  },
-
-  pestanas: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 14 },
-  pestana: {
-    flex: 1, paddingVertical: 9, borderRadius: 3,
-    backgroundColor: C.tarjeta, borderWidth: 1, borderColor: C.borde,
-  },
-  pestanaActiva: { backgroundColor: C.texto, borderColor: C.texto },
-  pestanaTexto: {
-    textAlign: 'center', color: C.suave, fontFamily: F.cuerpoMedio, fontSize: 13.5,
-  },
-  pestanaTextoActivo: { color: C.fondo },
-
-  filaBusqueda: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  buscador: {
-    backgroundColor: C.tarjeta, borderRadius: 3, paddingHorizontal: 14,
-    paddingVertical: 11, fontSize: 15, color: C.texto, fontFamily: F.cuerpo,
-    borderWidth: 1, borderColor: C.borde,
-  },
-  botonEscanear: {
-    backgroundColor: C.alerta, borderRadius: 3, paddingHorizontal: 16,
-    justifyContent: 'center', borderWidth: 1, borderColor: C.alerta,
-  },
-  botonEscanearTexto: { color: C.tarjeta, fontFamily: F.cuerpoFuerte, fontSize: 13 },
-
-  filaProducto: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: C.tarjeta,
-    borderRadius: 3, padding: 11, marginBottom: 8,
-    borderWidth: 1, borderColor: C.borde,
-  },
-  textoFila: { marginLeft: 12 },
-  nombreProducto: { fontSize: 14, color: C.texto, fontFamily: F.cuerpoMedio, lineHeight: 19 },
-  metaProducto: { fontSize: 11.5, color: C.suave, marginTop: 3, fontFamily: F.cuerpo },
-  agregar: {
-    fontSize: 22, color: C.acento, paddingHorizontal: 10, fontFamily: F.cuerpoFuerte,
-  },
-  agregado: { color: C.suave },
-  quitar: { fontSize: 11.5, color: C.alerta, marginTop: 5, fontFamily: F.cuerpo },
-
-  contador: { flexDirection: 'row', alignItems: 'center', gap: 13 },
-  contadorBoton: {
-    fontSize: 20, color: C.acento, fontFamily: F.cuerpoFuerte,
-    width: 20, textAlign: 'center',
-  },
-  contadorValor: {
-    fontSize: 15, color: C.texto, minWidth: 16, textAlign: 'center',
-    fontFamily: F.cuerpoFuerte,
-  },
-
-  rotulo: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 10 },
-  rotuloLinea: { flex: 1, height: 1, backgroundColor: C.borde },
-  rotuloTexto: {
-    fontSize: 11, color: C.suave, fontFamily: F.cuerpoMedio,
-    textTransform: 'uppercase', letterSpacing: 1.6,
-  },
-  seccionSinTope: {
-    fontSize: 11, color: C.suave, marginBottom: 10, fontFamily: F.cuerpoMedio,
-    textTransform: 'uppercase', letterSpacing: 1.6,
-  },
-  filaEntre: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-  },
-  enlace: { color: C.alerta, fontSize: 12, fontFamily: F.cuerpo },
-  vacioTitulo: {
-    fontSize: 18, color: C.texto, marginBottom: 8, textAlign: 'center',
-    fontFamily: F.titulo,
-  },
-  vacio: { color: C.suave, textAlign: 'center', lineHeight: 21, fontFamily: F.cuerpo, fontSize: 13.5 },
-
-  filaRadio: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  chip: {
-    paddingVertical: 5, paddingHorizontal: 13, borderRadius: 3,
-    backgroundColor: C.tarjeta, borderWidth: 1, borderColor: C.borde,
-  },
-  chipActivo: { backgroundColor: C.mostazaSuave, borderColor: C.mostaza },
-  chipTexto: { color: C.suave, fontSize: 12, fontFamily: F.cuerpoMedio },
-  chipTextoActivo: { color: C.texto },
-  chipAncho: { flex: 1, alignItems: 'center' },
-  filaModo: { flexDirection: 'row', gap: 8, marginTop: 10 },
-
-  filaRubros: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  chipChico: {
-    paddingVertical: 4, paddingHorizontal: 10, borderRadius: 3,
-    backgroundColor: C.tarjeta, borderWidth: 1, borderColor: C.borde,
-  },
-  chipChicoActivo: { backgroundColor: C.acentoSuave, borderColor: C.acento },
-  chipChicoTexto: { color: C.suave, fontSize: 11.5, fontFamily: F.cuerpo },
-
-  nota: {
-    fontSize: 11.5, color: C.suave, fontFamily: F.cuerpo,
-    lineHeight: 17, marginTop: 14, marginBottom: 10, fontStyle: 'italic',
-  },
-
-  tarjetaOferta: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: C.tarjeta,
-    borderRadius: 3, padding: 11, marginBottom: 8,
-    borderWidth: 1, borderColor: C.borde,
-  },
-  filaPrecios: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 4 },
-  precioOferta: { fontSize: 17, color: C.acento, fontFamily: F.cuerpoFuerte },
-  porUnidad: {
-    fontSize: 11.5, color: C.mostaza, fontFamily: F.cuerpoMedio,
-  },
-  precioTachado: {
-    fontSize: 12.5, color: C.suave, fontFamily: F.cuerpo,
-    textDecorationLine: 'line-through',
-  },
-  // Sello de descuento, como el precio pintado a mano sobre el cartel.
-  selloDescuento: {
-    backgroundColor: C.alerta, borderRadius: 3, paddingHorizontal: 7,
-    paddingVertical: 5, marginLeft: 8,
-  },
-  selloDescuentoTexto: { color: C.tarjeta, fontFamily: F.cuerpoFuerte, fontSize: 13 },
-
-  // Sello de doble filete, como el cartel de oferta pintado a mano.
-  sello: {
-    borderWidth: 2, borderColor: C.acento, borderRadius: 4,
-    padding: 4, marginTop: 18, backgroundColor: C.acentoSuave,
-  },
-  selloInterior: {
-    borderWidth: 1, borderColor: C.acento, borderRadius: 2,
-    paddingVertical: 16, paddingHorizontal: 16, alignItems: 'center',
-  },
-  selloEtiqueta: {
-    fontSize: 10.5, color: C.acento, fontFamily: F.cuerpoMedio,
-    textTransform: 'uppercase', letterSpacing: 3,
-  },
-  selloNombre: {
-    fontSize: 23, color: C.texto, marginTop: 8, fontFamily: F.titulo, textAlign: 'center',
-  },
-  selloDireccion: {
-    fontSize: 12, color: C.suave, marginTop: 4, fontFamily: F.cuerpo, textAlign: 'center',
-  },
-  selloTotal: { fontSize: 34, color: C.acento, marginTop: 10, fontFamily: F.titulo },
-  selloAhorro: {
-    fontSize: 13, color: C.texto, marginTop: 6, fontFamily: F.cuerpo, textAlign: 'center',
-  },
-
-  aviso: {
-    backgroundColor: C.alertaSuave, borderRadius: 4, padding: 16, marginTop: 18,
-    borderWidth: 1, borderColor: C.alerta,
-  },
-  avisoTitulo: { color: C.alerta, marginBottom: 5, fontFamily: F.titulo, fontSize: 15 },
-  avisoTexto: { color: C.texto, fontSize: 12.5, lineHeight: 19, fontFamily: F.cuerpo },
-
-  tarjeta: {
-    backgroundColor: C.tarjeta, borderRadius: 3, padding: 13, marginBottom: 8,
-    borderWidth: 1, borderColor: C.borde,
-  },
-  nombreCadena: { fontSize: 15, color: C.texto, fontFamily: F.cuerpoFuerte },
-  total: { fontSize: 17, color: C.texto, fontFamily: F.cuerpoFuerte },
-  totalGrande: { fontSize: 26, color: C.acento, fontFamily: F.titulo },
-  cobertura: { fontSize: 11.5, marginTop: 3, fontFamily: F.cuerpoMedio },
-  coberturaOk: { color: C.acento },
-  coberturaParcial: { color: C.alerta },
-  faltantes: {
-    fontSize: 11.5, color: C.suave, marginTop: 8,
-    fontStyle: 'italic', fontFamily: F.cuerpo, lineHeight: 17,
-  },
-  notaAhorro: { fontSize: 12.5, color: C.texto, marginTop: 8, fontFamily: F.cuerpo },
-
-  sustitutos: {
-    marginTop: 8, paddingTop: 8,
-    borderTopWidth: 1, borderTopColor: C.borde, borderStyle: 'dashed',
-  },
-  sustituto: { fontSize: 11.5, color: C.texto, fontFamily: F.cuerpo, lineHeight: 17 },
-  sustitutoEtiqueta: { color: C.acento, fontFamily: F.cuerpoMedio },
-  sustitutoUnidad: { color: C.mostaza, fontFamily: F.cuerpoMedio },
-
-  punteado: {
-    borderBottomWidth: 1, borderStyle: 'dashed',
-    borderColor: C.borde, marginTop: 11, marginBottom: 3,
-  },
-  filaItem: { flexDirection: 'row', alignItems: 'center', marginTop: 9, gap: 10 },
-  itemDesc: { flex: 1, fontSize: 12, color: C.suave, fontFamily: F.cuerpo },
-  itemPrecio: { fontSize: 12.5, color: C.texto, fontFamily: F.cuerpoFuerte },
-
-  pie: {
-    fontSize: 10.5, color: C.suave, textAlign: 'center', marginTop: 26,
-    lineHeight: 16, fontFamily: F.cuerpo,
-  },
-});

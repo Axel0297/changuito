@@ -8,6 +8,7 @@
  * tenia. Nunca se queda sin datos.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { Asset } from 'expo-asset';
@@ -51,8 +52,21 @@ async function datasetDelBundle(): Promise<Dataset> {
   await asset.downloadAsync();
   const uri = asset.localUri ?? asset.uri;
   if (!uri) throw new Error('el asset del dataset no quedo disponible');
-  const crudo = await new File(uri).text();
-  return JSON.parse(crudo) as Dataset;
+  return JSON.parse(await leerAsset(uri)) as Dataset;
+}
+
+/**
+ * En el telefono el asset queda como archivo y se lee con expo-file-system; en
+ * el navegador no hay filesystem —`File` revienta con "validatePath is not a
+ * function"— y el asset es una URL comun, asi que se baja con fetch.
+ */
+async function leerAsset(uri: string): Promise<string> {
+  if (Platform.OS === 'web') {
+    const res = await fetch(uri);
+    if (!res.ok) throw new Error('no pude leer el asset (' + res.status + ')');
+    return res.text();
+  }
+  return await new File(uri).text();
 }
 
 function archivoCache(): File {

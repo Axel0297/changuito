@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IconoProducto, colorDeEtiqueta, detectarCategoria } from './iconos';
-import { C } from './tema';
+import { C, R } from './tema';
 
 // Se consulta una vez por EAN y queda cacheado; '' significa "no tiene foto".
 const enMemoria = new Map<string, string>();
@@ -92,12 +92,13 @@ export function ImagenProducto({ ean, desc, tamano = 52, buscarFoto = false }: P
 }
 
 const i = StyleSheet.create({
+  // Organic redondea todo: el recuadro del producto es casi un circulo.
   marco: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: 4,
-    backgroundColor: C.tarjeta,
+    borderWidth: 0,
+    borderRadius: R.md,
+    backgroundColor: C.fondo,
     overflow: 'hidden',
   },
   foto: { width: '100%', height: '100%' },

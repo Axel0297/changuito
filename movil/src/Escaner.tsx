@@ -17,7 +17,7 @@ import {
 } from './comparador';
 import type { Alternativa, Indice, SucursalCercana } from './comparador';
 import { ImagenProducto } from './ImagenProducto';
-import { C, F } from './tema';
+import { C, E, F, R, SOMBRA } from './tema';
 
 interface Props {
   visible: boolean;
@@ -225,75 +225,79 @@ export function Escaner({ visible, indice, sucursales, onCerrar, onAgregar }: Pr
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: C.fondo },
-  centrado: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  centrado: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: E[6] },
   flex: { flex: 1 },
   derecha: { alignItems: 'flex-end' },
 
   barra: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8,
+    paddingHorizontal: E[4], paddingTop: E[3], paddingBottom: E[2],
   },
-  titulo: { fontSize: 18, color: C.texto, fontFamily: F.titulo },
-  cerrar: { fontSize: 14, color: C.alerta, fontFamily: F.cuerpoMedio },
-  regla: { height: 1, backgroundColor: C.borde, marginHorizontal: 16, marginBottom: 8 },
+  titulo: { fontSize: 22, color: C.texto, fontFamily: F.titulo, lineHeight: 26 },
+  cerrar: { fontSize: 14, color: C.acento, fontFamily: F.cuerpoMedio },
+  regla: { height: 0 },
 
+  // La camara es la unica superficie oscura del sistema: se la deja respirar
+  // con el mismo redondeo grande de los contenedores.
   camara: {
-    flex: 1, marginHorizontal: 16, marginBottom: 12, borderRadius: 4,
-    overflow: 'hidden', backgroundColor: '#2b1f16',
-    borderWidth: 1, borderColor: C.borde,
+    flex: 1, marginHorizontal: E[4], marginBottom: E[3], borderRadius: R.contenedor,
+    overflow: 'hidden', backgroundColor: C.texto,
   },
   camaraVista: { flex: 1 },
   mira: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 22,
+    alignItems: 'center', justifyContent: 'flex-end', paddingBottom: E[4],
   },
   miraTexto: {
     color: C.fondo, fontSize: 13, fontFamily: F.cuerpoMedio,
-    backgroundColor: 'rgba(59,42,30,0.82)', paddingHorizontal: 14,
-    paddingVertical: 7, borderRadius: 3,
+    backgroundColor: 'rgba(32,30,29,0.82)', paddingHorizontal: E[3],
+    paddingVertical: E[2], borderRadius: R.pill,
   },
 
   resultado: { maxHeight: '58%', backgroundColor: C.fondo },
-  resultadoFondo: { paddingHorizontal: 16, paddingBottom: 16 },
+  resultadoFondo: { paddingHorizontal: E[4], paddingBottom: E[4] },
   cabezaProducto: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14,
+    flexDirection: 'row', alignItems: 'center', gap: E[3], marginBottom: E[3],
   },
-  nombreProducto: { flex: 1, fontSize: 15, color: C.texto, fontFamily: F.cuerpoFuerte, lineHeight: 20 },
+  nombreProducto: {
+    flex: 1, fontSize: 15, color: C.texto, fontFamily: F.cuerpoFuerte, lineHeight: 20,
+  },
 
   fila: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: C.tarjeta,
-    borderRadius: 3, padding: 11, marginBottom: 7,
-    borderWidth: 1, borderColor: C.borde,
+    borderRadius: R.lg, padding: E[3], marginBottom: E[2],
   },
-  filaMejor: { backgroundColor: C.acentoSuave, borderColor: C.acento, borderWidth: 1.5 },
+  filaMejor: { backgroundColor: C.okSuave, ...SOMBRA.sm },
   cadena: { fontSize: 14, color: C.texto, fontFamily: F.cuerpoMedio },
-  cadenaMejor: { color: C.acento, fontFamily: F.cuerpoFuerte },
+  cadenaMejor: { color: C.ok, fontFamily: F.cuerpoFuerte },
   meta: { fontSize: 11, color: C.suave, marginTop: 2, fontFamily: F.cuerpo },
   precio: { fontSize: 16, color: C.texto, fontFamily: F.cuerpoFuerte },
-  precioMejor: { color: C.acento, fontSize: 18 },
+  precioMejor: { color: C.ok, fontSize: 19 },
   diferencia: { fontSize: 11, color: C.alerta, marginTop: 2, fontFamily: F.cuerpo },
-  porUnidad: { fontSize: 11, color: C.acento, marginTop: 2, fontFamily: F.cuerpoMedio },
-  porUnidadMejor: { fontSize: 11.5, color: C.mostaza, marginTop: 2, fontFamily: F.cuerpoFuerte },
+  porUnidad: { fontSize: 11, color: C.ok, marginTop: 2, fontFamily: F.cuerpoMedio },
+  porUnidadMejor: {
+    fontSize: 11.5, color: C.acentoFuerte, marginTop: 2, fontFamily: F.cuerpoFuerte,
+  },
   rotulo: {
-    fontSize: 10.5, color: C.suave, fontFamily: F.cuerpoMedio, marginTop: 16,
-    marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1.4,
+    fontSize: 10.5, color: C.suave, fontFamily: F.cuerpoMedio, marginTop: E[4],
+    marginBottom: E[2], textTransform: 'uppercase', letterSpacing: 1.6,
   },
 
   mensajeTitulo: {
-    fontSize: 17, color: C.texto, marginBottom: 6,
-    textAlign: 'center', fontFamily: F.titulo,
+    fontSize: 20, color: C.texto, marginBottom: E[2],
+    textAlign: 'center', fontFamily: F.titulo, lineHeight: 24,
   },
   mensaje: {
     color: C.suave, textAlign: 'center', lineHeight: 20,
-    fontFamily: F.cuerpo, fontSize: 13.5,
+    fontFamily: F.cuerpo, fontSize: 14,
   },
 
   boton: {
-    backgroundColor: C.acento, borderRadius: 3, paddingVertical: 13,
-    alignItems: 'center', marginTop: 14,
+    backgroundColor: C.acento, borderRadius: R.pill, paddingVertical: E[3],
+    alignItems: 'center', marginTop: E[3],
   },
   botonHecho: { backgroundColor: C.suave },
-  botonTexto: { color: C.tarjeta, fontFamily: F.cuerpoFuerte, fontSize: 14 },
-  botonSecundario: { paddingVertical: 13, alignItems: 'center', marginTop: 2 },
-  botonSecundarioTexto: { color: C.alerta, fontFamily: F.cuerpoMedio, fontSize: 14 },
+  botonTexto: { color: C.fondo, fontFamily: F.cuerpoFuerte, fontSize: 14 },
+  botonSecundario: { paddingVertical: E[3], alignItems: 'center', marginTop: E[1] },
+  botonSecundarioTexto: { color: C.acento, fontFamily: F.cuerpoMedio, fontSize: 14 },
 });

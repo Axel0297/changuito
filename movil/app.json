@@ -14,7 +14,7 @@
     "android": {
       "package": "com.axelr.changuito",
       "adaptiveIcon": {
-        "backgroundColor": "#f2e7d3",
+        "backgroundColor": "#f5ead8",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -54,7 +54,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#f2e7d3"
+          "backgroundColor": "#f5ead8"
         }
       ],
       "expo-asset"

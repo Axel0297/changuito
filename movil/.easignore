@@ -1,0 +1,28 @@
+# Qué NO subir a EAS Build.
+#
+# Cuando existe este archivo, EAS lo usa en lugar de .gitignore. Existe por una
+# razón puntual: `assets/dataset.json` está ignorado por git (son 10 MB que se
+# regeneran con el ETL todos los días, no tiene sentido versionarlos), pero el
+# build SÍ lo necesita porque viaja dentro del bundle de la app. Sin este
+# archivo, el APK saldría sin precios.
+#
+# Antes de compilar, generar el dataset:
+#   npm run movil            (desde la raíz del repo)
+
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Claves de firma: nunca se suben, EAS maneja las suyas.
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.kotlin/
+
+*.log
+.DS_Store

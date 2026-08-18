@@ -1,0 +1,16 @@
+node_modules/
+publico/
+
+# El dataset se regenera con `npm run etl`; no tiene sentido versionar 10 MB
+# que cambian todos los dias.
+data/*.json
+data/*.json.gz
+
+# La copia que viaja en el bundle de la app se genera igual que la anterior.
+movil/assets/dataset.json
+
+.expo/
+dist/
+web-build/
+*.log
+.DS_Store

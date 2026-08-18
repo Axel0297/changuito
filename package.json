@@ -1,0 +1,19 @@
+{
+  "name": "precios-app",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Comparador de precios de supermercados sobre datos abiertos SEPA",
+  "type": "module",
+  "scripts": {
+    "etl": "node etl/build-dataset.mjs",
+    "localidades": "node etl/build-dataset.mjs --listar --cache",
+    "movil": "node etl/build-dataset.mjs --salida movil/assets/dataset.json",
+    "iconos": "node etl/generar-iconos.mjs"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
+  }
+}

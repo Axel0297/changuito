@@ -95,21 +95,26 @@ export function Escaner({ visible, indice, sucursales, onCerrar, onAgregar }: Pr
           </View>
         ) : (
           <>
-            <View style={e.camara}>
-              <CameraView
-                style={e.camaraVista}
-                facing="back"
-                barcodeScannerSettings={{
-                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
-                }}
-                onBarcodeScanned={leido ? undefined : ({ data }) => alEscanear(data)}
-              />
-              {!leido && (
+            {/*
+              O la camara o el resultado, nunca los dos: dejar la camara
+              montada detras del resultado se comia media pantalla y mantenia
+              el sensor prendido gastando bateria al pedo.
+            */}
+            {!leido && (
+              <View style={e.camara}>
+                <CameraView
+                  style={e.camaraVista}
+                  facing="back"
+                  barcodeScannerSettings={{
+                    barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
+                  }}
+                  onBarcodeScanned={({ data }) => alEscanear(data)}
+                />
                 <View style={e.mira} pointerEvents="none">
                   <Text style={e.miraTexto}>Apuntá al código de barras</Text>
                 </View>
-              )}
-            </View>
+              </View>
+            )}
 
             {leido && (
               <ScrollView style={e.resultado} contentContainerStyle={e.resultadoFondo}>
@@ -254,7 +259,7 @@ const e = StyleSheet.create({
     paddingVertical: E[2], borderRadius: R.pill,
   },
 
-  resultado: { maxHeight: '58%', backgroundColor: C.fondo },
+  resultado: { flex: 1, backgroundColor: C.fondo },
   resultadoFondo: { paddingHorizontal: E[4], paddingBottom: E[4] },
   cabezaProducto: {
     flexDirection: 'row', alignItems: 'center', gap: E[3], marginBottom: E[3],

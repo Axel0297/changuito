@@ -247,16 +247,30 @@ function hoyISO() {
 export function ofertasDeclaradas(
   indice,
   sucursales,
-  { limite = 60, minDescuento = 0.05, rubro = null } = {}
+  { limite = 60, minDescuento = 0.05, rubro = null, busqueda = '' } = {}
 ) {
   const porIndice = new Map(sucursales.map((s) => [s.indice, s]));
   const hoy = hoyISO();
   const mejorPorClave = new Map();
 
+  // Buscar por texto tiene que filtrar acá y no en la pantalla: si se recortara
+  // despues del limite, "yerba" solo encontraria lo que entro en los primeros
+  // resultados. Cuando hay busqueda se ignora el rubro, porque quien escribe
+  // "lavandina" espera encontrarla sin fijarse en que solapa esta parado.
+  const termino = normalizar(busqueda).split(/\s+/).filter(Boolean);
+  const buscando = termino.length > 0;
+
   for (const { si, pi, precio, promo, leyenda } of indice.conPromo) {
     const suc = porIndice.get(si);
     if (!suc) continue;
-    if (rubro && detectarRubro(indice.dataset.productos[pi].desc) !== rubro) continue;
+
+    const producto = indice.dataset.productos[pi];
+    if (buscando) {
+      const texto = normalizar(producto.desc + ' ' + (producto.marca || ''));
+      if (!termino.every((t) => texto.includes(t))) continue;
+    } else if (rubro && detectarRubro(producto.desc) !== rubro) {
+      continue;
+    }
     // Una promo que ya vencio no es una oferta. Si no se pudo leer la fecha, se
     // muestra igual: el dato del dia es de hoy.
     if (leyenda?.hasta && leyenda.hasta < hoy) continue;

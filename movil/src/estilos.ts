@@ -124,7 +124,14 @@ export const s = StyleSheet.create({
   chipAncho: { flex: 1, alignItems: 'center' },
   filaModo: { flexDirection: 'row', gap: E[2], marginTop: E[2] },
 
+  buscadorOfertas: {
+    backgroundColor: C.tarjeta, borderRadius: R.pill, paddingHorizontal: E[4],
+    paddingVertical: E[2], fontSize: 15, color: C.texto, fontFamily: F.cuerpo,
+    borderWidth: 1, borderColor: C.borde, minHeight: 42, marginBottom: E[3],
+  },
   filaRubros: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: E[2] },
+  /** Mientras se busca por texto el rubro no filtra nada: se muestra apagado. */
+  filaRubrosApagada: { opacity: 0.45 },
   chipChico: {
     paddingVertical: 5, paddingHorizontal: E[3], borderRadius: R.pill,
     backgroundColor: C.tarjeta, borderWidth: 1, borderColor: 'transparent',

@@ -74,7 +74,7 @@ function Contenido() {
       <StatusBar barStyle="dark-content" />
 
       <View style={s.encabezado}>
-        <Text style={s.supratitulo}>changuito</Text>
+        <Text style={s.supratitulo}>estás en</Text>
         <Text style={s.titulo} numberOfLines={1} adjustsFontSizeToFit>
           {indice.dataset.centro.nombre}
         </Text>
@@ -352,6 +352,10 @@ function PantallaCarrito({
  */
 function PantallaOfertas({ indice, sucursales, agregar, radio, setRadio }: any) {
   const [rubro, setRubro] = useState<Rubro>('almacen');
+  const [busqueda, setBusqueda] = useState('');
+
+  // Con menos de tres letras no vale la pena filtrar: "le" trae cualquier cosa.
+  const filtrando = busqueda.trim().length >= 3;
 
   const promoPorCadena = useMemo(
     () => cadenasConPromo(indice, sucursales),
@@ -359,22 +363,46 @@ function PantallaOfertas({ indice, sucursales, agregar, radio, setRadio }: any) 
   );
 
   const rebajas = useMemo<OfertaDeclarada[]>(
-    () => ofertasDeclaradas(indice, sucursales, { limite: 50, rubro }),
-    [indice, sucursales, rubro]
+    () =>
+      ofertasDeclaradas(indice, sucursales, {
+        limite: 50,
+        rubro: filtrando ? null : rubro,
+        busqueda: filtrando ? busqueda : '',
+      }),
+    [indice, sucursales, rubro, busqueda, filtrando]
   );
 
   return (
     <ScrollView style={s.contenido} contentContainerStyle={s.scrollFondo}>
+      <TextInput
+        style={s.buscadorOfertas}
+        placeholder="Buscar una oferta: yerba, fideos…"
+        placeholderTextColor={C.suave}
+        value={busqueda}
+        onChangeText={setBusqueda}
+        autoCorrect={false}
+        clearButtonMode="while-editing"
+      />
+
       <SelectorRadio radio={radio} setRadio={setRadio} />
 
-      <View style={s.filaRubros}>
+      {/* Buscando por texto el rubro no aplica, asi que se muestra apagado. */}
+      <View style={[s.filaRubros, filtrando && s.filaRubrosApagada]}>
         {RUBROS.map((r) => (
           <Pressable
             key={r.id}
-            onPress={() => setRubro(r.id)}
-            style={[s.chipChico, rubro === r.id && s.chipChicoActivo]}
+            onPress={() => {
+              setBusqueda('');
+              setRubro(r.id);
+            }}
+            style={[s.chipChico, !filtrando && rubro === r.id && s.chipChicoActivo]}
           >
-            <Text style={[s.chipChicoTexto, rubro === r.id && s.chipTextoActivo]}>
+            <Text
+              style={[
+                s.chipChicoTexto,
+                !filtrando && rubro === r.id && s.chipTextoActivo,
+              ]}
+            >
               {r.nombre}
             </Text>
           </Pressable>
@@ -382,7 +410,9 @@ function PantallaOfertas({ indice, sucursales, agregar, radio, setRadio }: any) 
       </View>
 
       <Text style={s.nota}>
-        Descuentos que la cadena informa contra su propio precio de lista.
+        {filtrando
+          ? `Ofertas que coinciden con “${busqueda.trim()}”, en todos los rubros.`
+          : 'Descuentos que la cadena informa contra su propio precio de lista.'}
         {promoPorCadena.sin.length > 0 && (
           <Text>
             {'\n'}
@@ -394,7 +424,11 @@ function PantallaOfertas({ indice, sucursales, agregar, radio, setRadio }: any) 
       </Text>
 
       {rebajas.length === 0 && (
-        <Text style={s.vacio}>No hay rebajas en este rubro dentro del radio elegido.</Text>
+        <Text style={s.vacio}>
+          {filtrando
+            ? `Ninguna oferta de “${busqueda.trim()}” en los súper de tu zona.`
+            : 'No hay rebajas en este rubro dentro del radio elegido.'}
+        </Text>
       )}
 
       {rebajas.map((o) => {

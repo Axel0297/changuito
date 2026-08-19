@@ -161,7 +161,9 @@ export interface OfertaDeclarada extends Producto {
 export function ofertasDeclaradas(
   indice: Indice,
   sucursales: SucursalCercana[],
-  opciones?: { limite?: number; minDescuento?: number; rubro?: string | null }
+  opciones?: {
+    limite?: number; minDescuento?: number; rubro?: string | null; busqueda?: string;
+  }
 ): OfertaDeclarada[];
 
 export function cadenasConPromo(

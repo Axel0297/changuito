@@ -7,9 +7,11 @@
  */
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator, Modal, Pressable, SafeAreaView, ScrollView,
+  ActivityIndicator, Modal, Pressable, ScrollView,
   StyleSheet, Text, View,
 } from 'react-native';
+// El de react-native no protege nada en Android; este si.
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   alternativas, formatearPesos, formatearPorUnidad, preciosDeProducto,
@@ -70,7 +72,7 @@ export function Escaner({ visible, indice, sucursales, onCerrar, onAgregar }: Pr
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={cerrar}>
-      <SafeAreaView style={e.pantalla}>
+      <SafeAreaView style={e.pantalla} edges={['top', 'left', 'right', 'bottom']}>
         <View style={e.barra}>
           <Text style={e.titulo}>Escanear producto</Text>
           <Pressable onPress={cerrar} hitSlop={12}>

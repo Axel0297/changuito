@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator, FlatList, Pressable, SafeAreaView, ScrollView,
+  ActivityIndicator, FlatList, Pressable, ScrollView,
   StatusBar, Text, TextInput, View,
 } from 'react-native';
+// El SafeAreaView de react-native no hace nada en Android: el encabezado se
+// metia abajo de la barra de estado. Este si respeta barra, notch y gestos.
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
   useFonts, Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold,
 } from '@expo-google-fonts/figtree';
@@ -23,6 +26,14 @@ import { C } from './src/tema';
 import { s } from './src/estilos';
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Contenido />
+    </SafeAreaProvider>
+  );
+}
+
+function Contenido() {
   // Si las fuentes fallan se sigue con las del sistema: una tipografia que no
   // carga no puede dejar la app trabada en la pantalla de carga.
   const [fuentesCargadas, errorFuentes] = useFonts({
@@ -42,7 +53,7 @@ export default function App() {
   // Un spinner eterno no dice nada. Si algo se rompio, que se lea.
   if (error) {
     return (
-      <SafeAreaView style={[s.pantalla, s.centrado]}>
+      <SafeAreaView style={[s.pantalla, s.centrado]} edges={['top', 'left', 'right']}>
         <Text style={s.vacioTitulo}>No pude abrir los precios</Text>
         <Text style={s.vacio}>{error}</Text>
       </SafeAreaView>
@@ -51,7 +62,7 @@ export default function App() {
 
   if (!indice || !fuentesResueltas) {
     return (
-      <SafeAreaView style={[s.pantalla, s.centrado]}>
+      <SafeAreaView style={[s.pantalla, s.centrado]} edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={C.acento} />
         <Text style={s.cargando}>Abriendo el almacén…</Text>
       </SafeAreaView>
@@ -59,7 +70,7 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={s.pantalla}>
+    <SafeAreaView style={s.pantalla} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
       <View style={s.encabezado}>

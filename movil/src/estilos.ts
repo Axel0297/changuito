@@ -24,16 +24,25 @@ export const s = StyleSheet.create({
   cargando: { marginTop: E[3], color: C.suave, fontFamily: F.cuerpo, fontSize: 15 },
 
   // — encabezado —
-  encabezado: { paddingHorizontal: E[4], paddingTop: E[2], paddingBottom: E[3] },
+  // Centrado y con aire arriba: pegado al borde quedaba abajo de la barra de
+  // estado. El safe area ya reserva la altura del sistema; esto es el respiro
+  // que va por encima de eso.
+  encabezado: {
+    paddingHorizontal: E[4], paddingTop: E[6], paddingBottom: E[4],
+    alignItems: 'center',
+  },
   supratitulo: {
     fontSize: 11, color: C.acento, fontFamily: F.cuerpoMedio,
-    textTransform: 'uppercase', letterSpacing: 2.4,
+    textTransform: 'uppercase', letterSpacing: 2.4, textAlign: 'center',
   },
   titulo: {
     fontSize: 34, color: C.texto, fontFamily: F.titulo,
-    letterSpacing: -0.5, marginTop: 2, lineHeight: 40,
+    letterSpacing: -0.5, marginTop: E[1], lineHeight: 40, textAlign: 'center',
   },
-  subtitulo: { fontSize: 12.5, color: C.suave, fontFamily: F.cuerpo, marginTop: E[1] },
+  subtitulo: {
+    fontSize: 12.5, color: C.suave, fontFamily: F.cuerpo,
+    marginTop: E[1], textAlign: 'center',
+  },
 
   // — pestañas, en pill —
   pestanas: { flexDirection: 'row', paddingHorizontal: E[4], gap: E[1], marginBottom: E[3] },
